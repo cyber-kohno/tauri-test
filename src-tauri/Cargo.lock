@@ -3749,6 +3749,7 @@ dependencies = [
 name = "tauri-test"
 version = "0.1.0"
 dependencies = [
+ "regex",
  "serde",
  "serde_json",
  "tauri",
