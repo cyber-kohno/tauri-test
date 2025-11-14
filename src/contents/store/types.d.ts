@@ -14,3 +14,8 @@ export type DirCond = {
   depth?: number;
   isExclusion: boolean;
 };
+
+export type NodeDispProps = {
+  indent: number;
+  str: string;
+};

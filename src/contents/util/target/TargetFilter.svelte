@@ -4,6 +4,7 @@
     import DirectoryNameFilterConditions from "./DirectoryNameFilterConditions.svelte";
     import store, { createStoreUtil } from "../../store/store";
     import { writable } from "svelte/store";
+    import TreeManageFrame from "./tree/TreeManageFrame.svelte";
 
     let name = writable("");
     let count = writable<number>(-1);
@@ -113,7 +114,12 @@
         </div>
     </div>
     <div class="right">
-        <textarea value={$result} readonly></textarea>
+        <!-- <textarea value={$result} readonly></textarea> -->
+        <TreeManageFrame
+            items={$result
+                .split("\n")
+                .map((r) => ({ str: r, indent: r.split("\\").length }))}
+        />
     </div>
     {#if $isSearch}
         <div class="blind">
@@ -142,7 +148,7 @@
         }
     }
     .left {
-        background-color: #ffe;
+        background-color: #eff;
     }
     .operation-div {
         display: inline-block;
