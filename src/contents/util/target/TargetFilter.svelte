@@ -5,11 +5,11 @@
     import store, { createStoreUtil } from "../../store/store";
     import { writable } from "svelte/store";
     import TreeManageFrame from "./tree/TreeManageFrame.svelte";
+    import type { Node, ScanResponse, UsableNode } from "../../store/types";
 
     let name = writable("");
     let count = writable<number>(-1);
     let isSearch = writable(false);
-    let result = writable("");
     let scalnningDispDir = writable<string[]>([]);
 
     $: commit = createStoreUtil($store).commit;
@@ -47,14 +47,20 @@
         });
 
         try {
-            const original: string = await invoke("start_long_task", { req });
-            $result = original
-                .split("\n")
-                .map((l) => l.replace(req.rootPath, ""))
-                .join("\n");
+            const res: ScanResponse = await invoke("start_long_task", { req });
+            console.log(res);
+            const rec = (n: Node): UsableNode => ({
+                name: n.name,
+                children:
+                    n.children == null ? null : n.children.map((c) => rec(c)),
+                isOpen: false,
+                isSelected: false,
+            });
+            $store.resultTree = rec(res.node);
         } catch (e) {
             console.error("Error:", e);
             alert("指定したディレクトリが不正です。");
+            $isSearch = false;
         }
     };
 </script>
@@ -115,11 +121,9 @@
     </div>
     <div class="right">
         <!-- <textarea value={$result} readonly></textarea> -->
-        <TreeManageFrame
-            items={$result
-                .split("\n")
-                .map((r) => ({ str: r, indent: r.split("\\").length }))}
-        />
+        {#if $store.resultTree != undefined}
+            <TreeManageFrame root={$store.resultTree} />
+        {/if}
     </div>
     {#if $isSearch}
         <div class="blind">

@@ -7,6 +7,7 @@ const store = writable<Store>({
     expectedDepth: 0,
     limitDepth: 0,
     dirConds: [],
+    fileConds: [],
   },
 });
 

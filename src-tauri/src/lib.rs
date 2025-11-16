@@ -13,35 +13,67 @@ struct ScanRequest {
     expected_depth: u32,
     limit_depth: Option<u32>,
     dir_conds: Vec<DirCond>,
+    file_conds: Vec<FileCond>,
 }
+
 #[derive(Deserialize, Debug)]
-#[serde(rename_all = "camelCase")] // ここでキャメルケースに変換
-struct DirCond {
+#[serde(rename_all = "camelCase")]
+struct BaseCond {
     pattern: String,
-    depth: Option<u32>,
     is_exclusion: bool,
 }
 
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+/// ディレクトリ検索条件
+struct DirCond {
+    #[serde(flatten)]
+    base: BaseCond,
+    depth: Option<u32>,
+}
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+/// ファイル検索条件
+struct FileCond {
+    #[serde(flatten)]
+    base: BaseCond,
+}
+
+#[derive(Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
+struct ScanResponse {
+    result: String,
+    node: Node,
+}
+#[derive(Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
+struct Node {
+    name: String,
+    children: Option<Vec<Node>>,
+}
+
 #[command]
-fn start_long_task(app: AppHandle, req: ScanRequest) -> Result<String, String> {
+fn start_long_task(app: AppHandle, req: ScanRequest) -> Result<ScanResponse, String> {
+    println!("{}", req.root_path);
     println!("{:?}", req);
     let root = &req.root_path;
     let mut counter: u32 = 0;
-    let mut result: String = String::new();
-    search_file_rec(
-        root,
-        &app,
-        0,
-        &mut counter,
-        &req.dir_conds,
-        req.limit_depth,
-        &mut result,
-    )
-    .expect("expect_err expect_err");
-    // 完了通知
+    let mut res: ScanResponse = ScanResponse {
+        result: String::new(),
+        node: Node {
+            name: "root".to_string(),
+            children: None,
+        },
+    };
+    let node = search_file_rec(root, &app, 0, &mut counter, &req).unwrap();
+    match node {
+        Some(n) => res.node = n,
+        None => {}
+    }
+    // // 完了通知
     app.emit("progress_done", true).unwrap();
 
-    Ok(result)
+    Ok(res)
 }
 
 #[derive(Serialize)]
@@ -57,27 +89,30 @@ fn search_file_rec(
     app: &AppHandle,
     depth: u32,
     counter: &mut u32,
-    dir_conds: &Vec<DirCond>,
-    limit_depth: Option<u32>,
-    result: &mut String,
-) -> Result<(), io::Error> {
+    req: &ScanRequest,
+) -> Result<Option<Node>, io::Error> {
     *counter += 1;
 
     let name = Path::new(dir).file_name().unwrap().to_str().unwrap();
     // println!("{:?}", dir_conds);
-    let is_accept = dir_conds.iter().all(|cond| {
+    let is_accept = req.dir_conds.iter().all(|cond| {
         if cond.depth.map_or(true, |d| d != depth) {
             return true;
         }
-        wildcard_match(&cond.pattern, name) != cond.is_exclusion
+        wildcard_match(&cond.base.pattern, name) != cond.base.is_exclusion
     });
     if depth == 1 {
         println!("{}---{}: {}", depth, is_accept, name);
     }
     if !is_accept {
         println!("unmatch! {}", name);
-        return Ok(());
+        return Ok(Option::None);
     }
+    let mut children: Vec<Node> = Vec::new();
+    let mut node: Node = Node {
+        name: name.to_string(),
+        children: None,
+    };
     let data = Progress {
         path: dir.to_string(),
         name: name.to_string(),
@@ -94,29 +129,31 @@ fn search_file_rec(
 
         if path.is_dir() {
             // リミットが設定されている場合に限り、リミットに達していたらそれ以上深く走査しない
-            if let Some(limit) = limit_depth {
+            if let Some(limit) = req.limit_depth {
                 if depth == limit {
-                    return Ok(());
+                    return Ok(Option::None);
                 }
             }
-            search_file_rec(
-                &path.display().to_string(),
-                app,
-                depth + 1,
-                counter,
-                dir_conds,
-                limit_depth,
-                result,
-            )?;
+            let child = search_file_rec(&path.display().to_string(), app, depth + 1, counter, req)?;
+            match child {
+                Some(n) => children.push(n),
+                None => {}
+            };
         } else {
-            result.push_str(&format!(
-                "{}\n",
-                // path.file_name().unwrap().to_str().unwrap()
-                path.to_str().unwrap()
-            ));
+            // res.result.push_str(&format!(
+            //     "{}\n",
+            //     // path.file_name().unwrap().to_str().unwrap()
+            //     path.to_str().unwrap()
+            // ));
+            let name = path.file_name().unwrap().to_str().unwrap().to_string();
+            children.push(Node {
+                name,
+                children: None,
+            });
         }
     }
-    Ok(())
+    node.children = Some(children);
+    Ok(Option::Some(node))
 }
 
 /// ワイルドカード文字列 (「*」のみ) を正規表現に変換してコンパイルした Regex を返す
