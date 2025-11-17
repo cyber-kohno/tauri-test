@@ -1,6 +1,19 @@
 <script lang="ts">
+    import { onMount } from "svelte";
     import Phase from "./Phase.svelte";
     import TargetFilter from "./target/TargetFilter.svelte";
+
+    onMount(() => {
+        const handler = (e: MouseEvent) => {
+            e.preventDefault();
+        };
+        window.addEventListener("contextmenu", handler);
+
+        // クリーンアップ（コンポーネントが破棄されるとき）
+        return () => {
+            window.removeEventListener("contextmenu", handler);
+        };
+    });
 </script>
 
 <div class="header">

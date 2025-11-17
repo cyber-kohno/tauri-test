@@ -190,6 +190,7 @@ struct FileRequest {
 
 #[command]
 fn read_file(req: FileRequest) -> String {
+    println!("{}", req.file_path);
     let content = read_file_to_string(req.file_path).unwrap();
     content
 }
@@ -207,8 +208,7 @@ fn read_file_to_string<P: AsRef<std::path::Path>>(path: P) -> Result<String, io:
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![scan_directory])
-        .invoke_handler(tauri::generate_handler![read_file])
+        .invoke_handler(tauri::generate_handler![scan_directory, read_file])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

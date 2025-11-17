@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { invoke } from "@tauri-apps/api/core";
     import store, { createStoreUtil } from "../../../store/store";
     import type { NodeDispProps, UsableNode } from "../../../store/types";
 
@@ -30,7 +31,12 @@
     };
 
     $: dispFile = () => {
-        alert(item.node.path);
+        // alert(item.node.path);
+        invoke("read_file", { req: { filePath: item.node.path } }).then(
+            (str) => {
+                console.log(str);
+            },
+        );
     };
 
     $: child = item.node.child;

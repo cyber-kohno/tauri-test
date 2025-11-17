@@ -11,6 +11,7 @@
         ScanResponse,
         UsableNode,
     } from "../../store/types";
+    import OperationButton from "../item/OperationButton.svelte";
 
     let name = writable("");
     let count = writable<number>(-1);
@@ -73,7 +74,10 @@
                     isSelected: false,
                 };
             };
-            $store.resultTree = rec(res.node, req.rootPath);
+            $store.resultTree = rec(
+                res.node,
+                req.rootPath.split("\\").slice(0, -1).join("\\"),
+            );
         } catch (e) {
             console.error("Error:", e);
             alert("指定したディレクトリが不正です。");
@@ -130,10 +134,13 @@
             <div class="label-record">{"*file_name_filter_conditions"}</div>
         </div>
         <div class="operation-div">
-            <button class="button" onclick={start}>Reset</button>
-            <button class="button" data--disable={!isRequestOk} onclick={start}
-                >Scan</button
-            >
+            <OperationButton name={"Reset"} width={160} callback={start} />
+            <OperationButton
+                name={"Scan"}
+                width={160}
+                disable={!isRequestOk}
+                callback={start}
+            />
         </div>
     </div>
     <div class="right">
@@ -175,31 +182,9 @@
         display: inline-block;
         position: relative;
         width: 100%;
-        height: 40px;
+        height: 32px;
         background-color: #8888aa44;
         text-align: right;
-    }
-    .button {
-        display: inline-block;
-        position: relative;
-        width: 150px;
-        height: 30px;
-        background-color: #8888aa;
-        box-sizing: border-box;
-        border-radius: 4px;
-        margin: 5px 4px 0 0;
-        color: white;
-        font-size: 18px;
-        font-weight: 600;
-        border: 1px solid #338;
-        text-align: center;
-        &:hover {
-            opacity: 0.7;
-        }
-    }
-    .button[data--disable="true"] {
-        opacity: 0.5;
-        pointer-events: none;
     }
     .right {
         background-color: #eff;
@@ -208,7 +193,7 @@
         display: inline-block;
         position: relative;
         width: 100%;
-        height: calc(100% - 40px);
+        height: calc(100% - 32px);
         overflow: auto;
     }
     .list-item {
