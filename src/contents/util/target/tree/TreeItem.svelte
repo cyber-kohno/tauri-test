@@ -1,23 +1,75 @@
 <script lang="ts">
     import store, { createStoreUtil } from "../../../store/store";
-    import type { NodeDispProps } from "../../../store/types";
+    import type { NodeDispProps, UsableNode } from "../../../store/types";
 
     $: commit = createStoreUtil($store).commit;
     export let item!: NodeDispProps;
 
     $: toggleOpen = () => {
-        item.node.isOpen = !item.node.isOpen;
+        const child = item.node.child;
+        if (child == undefined) throw new Error();
+        child.isOpen = !child.isOpen;
+        commit();
+    };
+    $: toggleSelect = () => {
+        const child = item.node.child;
+        if (child != undefined) throw new Error();
+        item.node.isSelected = !item.node.isSelected;
+        commit();
+    };
+    $: toggleUse = () => {
+        const child = item.node.child;
+        if (child == undefined) throw new Error();
+        const rec = (node: UsableNode, isSelect: boolean) => {
+            if (node.child == undefined) node.isSelected = isSelect;
+            else node.child.nodes.forEach((n) => rec(n, isSelect));
+        };
+        if (child.selectCnt == child.fileCnt) rec(item.node, false);
+        else rec(item.node, true);
         commit();
     };
 
-    $: children = item.node.children;
+    $: dispFile = () => {
+        alert(item.node.path);
+    };
+
+    $: child = item.node.child;
 </script>
 
-<div class="wrap" style:margin-left="{item.indent * 10}px">
-    {#if children != null && children.length > 0}
-        <button onclick={toggleOpen}>{item.node.isOpen ? "-" : "+"}</button>
+<div class="wrap">
+    {#each item.indents as indent, i}
+        <div class="indent">
+            {#if indent !== "none"}
+                <div class="inner" data--indent={indent}></div>
+                {#if i === item.indents.length - 1}
+                    <div class="branch"></div>
+                {/if}
+            {/if}
+        </div>
+    {/each}
+    <div
+        class="type"
+        data--file={child == null}
+        data--select={item.node.isSelected}
+        data--use={(() => {
+            if (child == null) return "";
+            else if (child.selectCnt == child.fileCnt) return "all";
+            else if (child.selectCnt > 0) return "some";
+            else if (child.selectCnt === 0) return "none";
+        })()}
+        onclick={child == null ? toggleSelect : toggleUse}
+    >
+        {child == null ? "FILE" : "DIR"}
+    </div>
+    {#if child != undefined && child.nodes.length > 0}
+        <button onclick={toggleOpen}>{child.isOpen ? "-" : "+"}</button>
     {/if}
-    <div class="str" data--file={item.node.children == null}>{item.str}</div>
+    <div class="str" data--file={child == null} ondblclick={dispFile}>
+        {item.node.name}
+    </div>
+    {#if child != undefined && child.nodes.length > 0}
+        <div class="filecnt">{`[${child.selectCnt}/${child.fileCnt}]`}</div>
+    {/if}
 </div>
 
 <style>
@@ -30,8 +82,42 @@
         background-color: #aaccff44;
 
         &:hover {
-            background-color: #bbdd0011;
+            background-color: #bbdd0005;
         }
+
+        * {
+            vertical-align: top;
+        }
+    }
+    .indent {
+        display: inline-block;
+        position: relative;
+        height: 100%;
+        background-color: #ccccccaa;
+        width: 30px;
+    }
+    .inner {
+        display: inline-block;
+        position: absolute;
+        top: 0;
+        left: 12px;
+        background-color: #aaffaa;
+        width: 5px;
+    }
+    .inner[data--indent="middle"] {
+        height: 24px;
+    }
+    .inner[data--indent="last"] {
+        height: 12px;
+    }
+    .branch {
+        display: inline-block;
+        position: absolute;
+        top: 10px;
+        left: 12px;
+        background-color: #aaffaa;
+        width: 18px;
+        height: 5px;
     }
     button {
         display: inline-block;
@@ -51,18 +137,68 @@
             background-color: #ff5;
         }
     }
-    .str {
+    .type {
         display: inline-block;
         position: relative;
         height: 100%;
         margin: 0 0 0 2px;
         font-size: 14px;
-        color: #3333aa;
-        &:hover {
-            color: #33aa33;
-        }
+        color: #fff;
+        text-align: center;
+        width: 50px;
+        box-sizing: border-box;
+        border-radius: 4px;
+        font-weight: 600;
+        line-height: 24px;
+        user-select: none;
+        cursor: default;
+    }
+    .type[data--file="true"] {
+        background-color: #ff666633;
+    }
+    .type[data--file="true"][data--select="true"] {
+        background-color: #ff6666ff;
+    }
+    .type[data--file="false"][data--use="all"] {
+        background-color: #191;
+    }
+    .type[data--file="false"][data--use="none"] {
+        background-color: #11991133;
+    }
+    .type[data--file="false"][data--use="some"] {
+        background-color: #99991188;
+    }
+    .str {
+        display: inline-block;
+        position: relative;
+        height: 100%;
+        margin: 0 0 0 4px;
+        font-size: 14px;
+        padding: 0 2px;
+        box-sizing: border-box;
+        color: #333333;
     }
     .str[data--file="true"] {
-        background-color: #ff999999;
+        background-color: #ff999933;
+        &:hover {
+            color: #33aa33;
+            /*user-select: contain;*/
+        }
+    }
+    .str[data--file="false"] {
+        border: 1px solid #00000044;
+        background-color: #ffffff33;
+        border-radius: 2px;
+    }
+    .filecnt {
+        display: inline-block;
+        position: relative;
+        height: 100%;
+        margin: 0 0 0 8px;
+        font-size: 14px;
+        padding: 0 2px;
+        box-sizing: border-box;
+        color: #aa3333ff;
+        font-weight: 600;
     }
 </style>

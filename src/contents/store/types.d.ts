@@ -28,15 +28,21 @@ export interface Node {
   children: null | Node[];
 }
 
+export interface ChildProps {
+  fileCnt: number;
+  selectCnt: number;
+  isOpen: boolean;
+  nodes: UsableNode[];
+}
 export interface UsableNode {
   name: string;
-  isOpen: boolean;
   isSelected: boolean;
-  children: null | UsableNode[];
+  path: string;
+  child?: ChildProps;
 }
 
+export type NodeIndent = "none" | "middle" | "last";
 export type NodeDispProps = {
-  indent: number;
-  str: string;
+  indents: NodeIndent[];
   node: UsableNode;
 };

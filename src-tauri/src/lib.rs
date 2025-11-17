@@ -53,7 +53,7 @@ struct Node {
 }
 
 #[command]
-fn start_long_task(app: AppHandle, req: ScanRequest) -> Result<ScanResponse, String> {
+fn scan_directory(app: AppHandle, req: ScanRequest) -> Result<ScanResponse, String> {
     println!("{}", req.root_path);
     println!("{:?}", req);
     let root = &req.root_path;
@@ -182,11 +182,33 @@ fn wildcard_match(pattern: &str, text: &str) -> bool {
     compile_wildcard_pattern(pattern).is_match(text)
 }
 
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")] // ここでキャメルケースに変換
+struct FileRequest {
+    file_path: String,
+}
+
+#[command]
+fn read_file(req: FileRequest) -> String {
+    let content = read_file_to_string(req.file_path).unwrap();
+    content
+}
+/// 指定したパスのファイルを読み込み、文字列として返す
+///
+/// # Errors
+/// * ファイルが見つからない
+/// * 読み込みに失敗した
+/// * ファイルの内容が UTF‑8 でない
+fn read_file_to_string<P: AsRef<std::path::Path>>(path: P) -> Result<String, io::Error> {
+    fs::read_to_string(path)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![start_long_task])
+        .invoke_handler(tauri::generate_handler![scan_directory])
+        .invoke_handler(tauri::generate_handler![read_file])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

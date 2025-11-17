@@ -5,7 +5,12 @@
     import store, { createStoreUtil } from "../../store/store";
     import { writable } from "svelte/store";
     import TreeManageFrame from "./tree/TreeManageFrame.svelte";
-    import type { Node, ScanResponse, UsableNode } from "../../store/types";
+    import type {
+        ChildProps,
+        Node,
+        ScanResponse,
+        UsableNode,
+    } from "../../store/types";
 
     let name = writable("");
     let count = writable<number>(-1);
@@ -47,16 +52,28 @@
         });
 
         try {
-            const res: ScanResponse = await invoke("start_long_task", { req });
-            console.log(res);
-            const rec = (n: Node): UsableNode => ({
-                name: n.name,
-                children:
-                    n.children == null ? null : n.children.map((c) => rec(c)),
-                isOpen: false,
-                isSelected: false,
-            });
-            $store.resultTree = rec(res.node);
+            const res: ScanResponse = await invoke("scan_directory", { req });
+            // console.log(res);
+            const rec = (n: Node, path: string): UsableNode => {
+                const curPath = path + "\\" + n.name;
+                let child: ChildProps | undefined = undefined;
+                if (n.children != null) {
+                    const nodes = n.children.map((c) => rec(c, curPath));
+                    child = {
+                        fileCnt: 0,
+                        isOpen: false,
+                        selectCnt: 0,
+                        nodes,
+                    };
+                }
+                return {
+                    name: n.name,
+                    path: curPath,
+                    child,
+                    isSelected: false,
+                };
+            };
+            $store.resultTree = rec(res.node, req.rootPath);
         } catch (e) {
             console.error("Error:", e);
             alert("指定したディレクトリが不正です。");

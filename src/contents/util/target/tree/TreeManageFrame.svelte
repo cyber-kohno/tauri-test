@@ -1,6 +1,11 @@
 <script lang="ts">
     import store, { createStoreUtil } from "../../../store/store";
-    import type { NodeDispProps, UsableNode } from "../../../store/types";
+    import type {
+        ChildProps,
+        NodeDispProps,
+        NodeIndent,
+        UsableNode,
+    } from "../../../store/types";
     import TreeItem from "./TreeItem.svelte";
 
     export let root!: UsableNode;
@@ -9,17 +14,51 @@
     $: items = (() => {
         const list: NodeDispProps[] = [];
 
-        const rec = (node: UsableNode, depth: number) => {
-            list.push({
-                indent: depth,
-                str: node.name,
+        const rec = (
+            node: UsableNode,
+            indents: NodeIndent[],
+            isOpen: boolean,
+        ): [number, number] => {
+            const record: NodeDispProps = {
+                indents,
                 node,
-            });
-            if (node.children != null && node.isOpen)
-                node.children.forEach((c) => rec(c, depth + 1));
+            };
+            if (isOpen) {
+                list.push(record);
+            }
+            let [fileCnt, selectCnt] = [0, 0];
+            if (node.child != undefined) {
+                const child = node.child;
+                [child.fileCnt, child.selectCnt] = [0, 0];
+                const nodes = node.child.nodes;
+                nodes.forEach((n, i) => {
+                    const nextIndents: NodeIndent[] = indents.slice();
+                    // 自身がlastの場合、子要素はnoneにする
+                    if (nextIndents[nextIndents.length - 1] === "last")
+                        nextIndents[nextIndents.length - 1] = "none";
+                    nextIndents.push(
+                        (() => {
+                            if (i === nodes.length - 1) return "last";
+                            else return "middle";
+                        })(),
+                    );
+                    const [cFileCnt, cSelectCnt] = rec(
+                        n,
+                        nextIndents,
+                        isOpen && child.isOpen,
+                    );
+                    child.fileCnt += cFileCnt;
+                    child.selectCnt += cSelectCnt;
+                });
+                fileCnt += child.fileCnt;
+                selectCnt += child.selectCnt;
+            } else {
+                fileCnt++;
+                selectCnt += node.isSelected ? 1 : 0;
+            }
+            return [fileCnt, selectCnt];
         };
-        if (root.children == null) throw new Error();
-        root.children.forEach((c) => rec(c, 0));
+        rec(root, [], true);
 
         console.log(list.length);
         return list;
