@@ -1,6 +1,8 @@
 export type Store = {
   scanRequest: ScanRequest;
   resultTree?: UsableNode;
+
+  preview?: Preview;
 };
 
 export type ScanRequest = {
@@ -45,4 +47,10 @@ export type NodeIndent = "none" | "middle" | "last";
 export type NodeDispProps = {
   indents: NodeIndent[];
   node: UsableNode;
+  seq: number;
+};
+
+export type Preview = {
+  src: string;
+  language: string;
 };

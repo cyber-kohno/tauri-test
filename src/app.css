@@ -1,3 +1,15 @@
+@import "highlight.js/styles/github.css";
+
+/*[data-theme="dark"] {
+    --hljs-bg: #5e5e5e;
+    --hljs-color: #dcdcdc;
+}
+
+.hljs {
+    background: var(--hljs-bg);
+    color: var(--hljs-color);
+}*/
+
 html,
 body {
     height: 100%;

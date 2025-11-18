@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { writable } from "svelte/store";
     import store, { createStoreUtil } from "../../../store/store";
     import type {
         ChildProps,
@@ -8,86 +7,85 @@
         UsableNode,
     } from "../../../store/types";
     import OperationButton from "../../item/OperationButton.svelte";
-    import TreeItem from "./TreeItem.svelte";
+    import ChooseRecord from "./ChooseRecord.svelte";
     import FloatDialog from "../../item/FloatDialog.svelte";
+    import { writable } from "svelte/store";
+    import ChooseUtil from "./chooseUtil";
 
-    export let root!: UsableNode;
+    export let root: UsableNode;
+
+    let ref: HTMLDivElement | undefined = undefined;
     $: commit = createStoreUtil($store).commit;
 
-    const confirmStr = writable<string | null>(null);
+    let scrollTop = 0;
 
-    $: items = (() => {
-        const list: NodeDispProps[] = [];
+    const isFlat = writable<boolean>(false);
 
-        const rec = (
-            node: UsableNode,
-            indents: NodeIndent[],
-            isOpen: boolean,
-        ): [number, number] => {
-            const record: NodeDispProps = {
-                indents,
-                node,
-            };
-            if (isOpen) {
-                list.push(record);
-            }
-            let [fileCnt, selectCnt] = [0, 0];
-            if (node.child != undefined) {
-                const child = node.child;
-                [child.fileCnt, child.selectCnt] = [0, 0];
-                const nodes = node.child.nodes;
-                nodes.forEach((n, i) => {
-                    const nextIndents: NodeIndent[] = indents.slice();
-                    // 自身がlastの場合、子要素はnoneにする
-                    if (nextIndents[nextIndents.length - 1] === "last")
-                        nextIndents[nextIndents.length - 1] = "none";
-                    nextIndents.push(
-                        (() => {
-                            if (i === nodes.length - 1) return "last";
-                            else return "middle";
-                        })(),
-                    );
-                    const [cFileCnt, cSelectCnt] = rec(
-                        n,
-                        nextIndents,
-                        isOpen && child.isOpen,
-                    );
-                    child.fileCnt += cFileCnt;
-                    child.selectCnt += cSelectCnt;
-                });
-                fileCnt += child.fileCnt;
-                selectCnt += child.selectCnt;
-            } else {
-                fileCnt++;
-                selectCnt += node.isSelected ? 1 : 0;
-            }
-            return [fileCnt, selectCnt];
-        };
-        rec(root, [], true);
-
+    $: baseRecords = (() => {
+        const list = ChooseUtil.getDispRecords(root, $isFlat);
         console.log(list.length);
+        return list;
+    })();
+    $: dispRecords = (() => {
+        const list: NodeDispProps[] = [];
+        baseRecords.forEach((r, i) => {
+            if (ref != undefined) {
+                const rect = ref.getBoundingClientRect();
+                console.log(scrollTop);
+                const criteria = -scrollTop + i * 25;
+                console.log(criteria);
+                if (criteria >= 0 && criteria <= rect.height) list.push(r);
+            }
+        });
         return list;
     })();
 
     $: cancel = () => {
-        $confirmStr = "abc";
+        $store.resultTree = undefined;
+    };
+    $: toggleView = () => {
+        $isFlat = !$isFlat;
     };
     $: transfer = () => {};
+
+    $: getDir = (item: NodeDispProps) => {
+        let ret: string | null = null;
+        if ($isFlat) {
+            ret = item.node.path
+                .replace($store.scanRequest.rootPath, "")
+                .replace(item.node.name, "");
+        }
+        return ret;
+    };
 </script>
 
 <div class="operation-div">
     <OperationButton
-        name={"Cancel"}
-        width={160}
+        name={!$isFlat ? "Flat" : "Tree"}
+        width={120}
         disable={false}
-        callback={cancel}
+        callback={toggleView}
+    />
+    <OperationButton
+        name={!$isFlat ? "|← →|" : "|→ ←|"}
+        width={90}
+        disable={false}
+        callback={toggleView}
     />
 </div>
 <div class="main">
-    <div class="list">
-        {#each items as item}
-            <TreeItem {item} />
-        {/each}
+    <div
+        class="list"
+        bind:this={ref}
+        onscroll={(e) => {
+            scrollTop = e.currentTarget.scrollTop;
+        }}
+    >
+        <div class="inner" style:height="{baseRecords.length * 25}px">
+            {#each dispRecords as item, i}
+                <ChooseRecord {item} dir={getDir(item)} />
+            {/each}
+        </div>
     </div>
 </div>
 <div class="operation-div">
@@ -104,7 +102,7 @@
         callback={transfer}
     />
 </div>
-{#if $confirmStr != null}
+{#if $store.preview != undefined}
     <FloatDialog />
 {/if}
 
@@ -123,6 +121,11 @@
         height: calc(100% - 8px);
         background-color: #ffffff;
         overflow: auto;
+    }
+    .inner {
+        display: inline-block;
+        position: relative;
+        width: 100%;
     }
     .operation-div {
         display: inline-block;

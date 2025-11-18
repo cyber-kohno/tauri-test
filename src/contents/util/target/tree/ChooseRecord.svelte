@@ -4,7 +4,8 @@
     import type { NodeDispProps, UsableNode } from "../../../store/types";
 
     $: commit = createStoreUtil($store).commit;
-    export let item!: NodeDispProps;
+    export let item: NodeDispProps;
+    export let dir: string | null = null;
 
     $: toggleOpen = () => {
         const child = item.node.child;
@@ -31,10 +32,24 @@
     };
 
     $: dispFile = () => {
+        if (item.node.child != undefined) return;
         // alert(item.node.path);
         invoke("read_file", { req: { filePath: item.node.path } }).then(
             (str) => {
-                console.log(str);
+                let language = "";
+                const fileName = item.node.name;
+                const dot = fileName.lastIndexOf(".");
+                const extention = dot !== -1 ? fileName.slice(dot + 1) : "";
+                switch (extention) {
+                    case "java":
+                        language = "java";
+                        break;
+                }
+                $store.preview = {
+                    language,
+                    src: str as string,
+                };
+                commit();
             },
         );
     };
@@ -42,7 +57,7 @@
     $: child = item.node.child;
 </script>
 
-<div class="wrap">
+<div class="wrap" style:top="{item.seq * 25}px">
     {#each item.indents as indent, i}
         <div class="indent">
             {#if indent !== "none"}
@@ -70,7 +85,12 @@
     {#if child != undefined && child.nodes.length > 0}
         <button onclick={toggleOpen}>{child.isOpen ? "-" : "+"}</button>
     {/if}
-    <div class="str" data--file={child == null} ondblclick={dispFile}>
+    {#if dir != null}
+        <div class="dir">
+            {dir}
+        </div>
+    {/if}
+    <div class="str" data--file={child == null} oncontextmenu={dispFile}>
         {item.node.name}
     </div>
     {#if child != undefined && child.nodes.length > 0}
@@ -80,12 +100,13 @@
 
 <style>
     .wrap {
-        display: block;
-        position: relative;
-        /*width: 200px;*/
+        display: inline-block;
+        position: absolute;
+        left: 0;
+        min-width: 100%;
         height: 24px;
-        margin-top: 1px;
-        background-color: #aaccff44;
+        background-color: #aaccff05;
+        white-space: nowrap;
 
         &:hover {
             background-color: #bbdd0005;
@@ -185,7 +206,7 @@
         color: #333333;
     }
     .str[data--file="true"] {
-        background-color: #ff999933;
+        /*background-color: #ff999933;*/
         &:hover {
             color: #33aa33;
             /*user-select: contain;*/
@@ -195,6 +216,17 @@
         border: 1px solid #00000044;
         background-color: #ffffff33;
         border-radius: 2px;
+    }
+    .dir {
+        display: inline-block;
+        position: relative;
+        height: 100%;
+        /*margin: 0 0 0 4px;*/
+        font-size: 14px;
+        padding: 0 2px;
+        box-sizing: border-box;
+        color: #333388aa;
+        background-color: #ffff3333;
     }
     .filecnt {
         display: inline-block;

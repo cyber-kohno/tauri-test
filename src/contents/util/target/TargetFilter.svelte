@@ -13,7 +13,6 @@
     } from "../../store/types";
     import OperationButton from "../item/OperationButton.svelte";
 
-    let name = writable("");
     let count = writable<number>(-1);
     let isSearch = writable(false);
     let scalnningDispDir = writable<string[]>([]);
@@ -21,7 +20,7 @@
     $: commit = createStoreUtil($store).commit;
     $: req = $store.scanRequest;
 
-    $: isRequestOk = (() => {
+    $: isRequestOk = () => {
         return (
             req.rootPath.length > 0 &&
             !req.dirConds.reduce(
@@ -29,7 +28,7 @@
                 false,
             )
         );
-    })();
+    };
 
     const start = async () => {
         $isSearch = true;
@@ -98,7 +97,7 @@
                 value={req.rootPath}
                 oninput={(e) => {
                     req.rootPath = e.currentTarget.value;
-                    commit();
+                    // commit();
                 }}
             />
             <!-- 期待値算出時の階層 -->
@@ -138,7 +137,7 @@
             <OperationButton
                 name={"Scan"}
                 width={160}
-                disable={!isRequestOk}
+                disable={!isRequestOk()}
                 callback={start}
             />
         </div>

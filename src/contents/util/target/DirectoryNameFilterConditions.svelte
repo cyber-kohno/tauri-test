@@ -54,7 +54,7 @@
             value={con.pattern}
             oninput={(e) => {
                 con.pattern = e.currentTarget.value;
-                commit();
+                $store.scanRequest.dirConds = dirConds.slice();
             }}
         />
     </div>
