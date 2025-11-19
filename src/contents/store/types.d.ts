@@ -1,9 +1,14 @@
 export type Store = {
+  phase: Phase;
   scanRequest: ScanRequest;
   resultTree?: UsableNode;
 
+  rvReq: RevalidateRequest;
+
   preview?: Preview;
 };
+
+export type Phase = 'listup' | 'revalidate' | 'execute';
 
 export type ScanRequest = {
   rootPath: string;
@@ -53,4 +58,9 @@ export type NodeDispProps = {
 export type Preview = {
   src: string;
   language: string;
+};
+
+
+export type RevalidateRequest = {
+  targets: string;
 };

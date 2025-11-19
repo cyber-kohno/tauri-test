@@ -2,6 +2,7 @@ import { writable } from "svelte/store";
 import type { ScanRequest, Store } from "./types";
 
 const store = writable<Store>({
+  phase: 'listup',
   scanRequest: {
     rootPath: "",
     expectedDepth: 0,
@@ -9,6 +10,9 @@ const store = writable<Store>({
     dirConds: [],
     fileConds: [],
   },
+  rvReq: {
+    targets: ''
+  }
 });
 
 export type StoreUtil = {

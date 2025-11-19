@@ -2,7 +2,7 @@ import type {
   NodeDispProps,
   NodeIndent,
   UsableNode,
-} from "../../../store/types";
+} from "../../store/types";
 
 namespace ChooseUtil {
   export const getDispRecords = (

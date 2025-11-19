@@ -1,21 +1,15 @@
 <script lang="ts">
-    import store, { createStoreUtil } from "../../../store/store";
-    import type {
-        ChildProps,
-        NodeDispProps,
-        NodeIndent,
-        UsableNode,
-    } from "../../../store/types";
-    import OperationButton from "../../item/OperationButton.svelte";
     import ChooseRecord from "./ChooseRecord.svelte";
-    import FloatDialog from "../../item/FloatDialog.svelte";
     import { writable } from "svelte/store";
     import ChooseUtil from "./chooseUtil";
+  import type { NodeDispProps, UsableNode } from "../../store/types";
+  import store from "../../store/store";
+  import OperationButton from "../../util/OperationButton.svelte";
+  import FloatDialog from "../../util/FloatDialog.svelte";
 
     export let root: UsableNode;
-
+    
     let ref: HTMLDivElement | undefined = undefined;
-    $: commit = createStoreUtil($store).commit;
 
     let scrollTop = 0;
 
@@ -46,7 +40,10 @@
     $: toggleView = () => {
         $isFlat = !$isFlat;
     };
-    $: transfer = () => {};
+    $: transfer = () => {
+        $store.phase = 'revalidate';
+        $store.rvReq.targets = dispRecords.map(r => r.node.path).join('\n');
+    };
 
     $: getDir = (item: NodeDispProps) => {
         let ret: string | null = null;
