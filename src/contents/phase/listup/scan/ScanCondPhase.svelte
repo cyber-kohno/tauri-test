@@ -2,18 +2,17 @@
   import { invoke } from "@tauri-apps/api/core";
   import { listen } from "@tauri-apps/api/event";
   import DirNameFilterConds from "./DirNameFilterConds.svelte";
-  import store from "../../store/store";
   import { writable } from "svelte/store";
+  import FileNameFilterConds from "./FileNameFilterConds.svelte";
+  import store from "../../../store/store";
   import type {
     ChildProps,
-    Node,
+    PayloadNode,
     ScanResponse,
     UsableNode,
-  } from "../../store/types";
-  import OperationButton from "../../util/OperationButton.svelte";
-  import ChooseFrame from "../choose/ChooseFrame.svelte";
-  import NumberInput from "../../util/form/NumberInput.svelte";
-  import FileNameFilterConds from "./FileNameFilterConds.svelte";
+  } from "../../../store/types";
+  import NumberInput from "../../../util/form/NumberInput.svelte";
+  import OperationButton from "../../../util/OperationButton.svelte";
 
   let count = writable<number>(-1);
   let isSearch = writable(false);
@@ -24,8 +23,8 @@
   $: isRequestOk = () => {
     return (
       req.rootPath.length > 0 &&
-      !req.dirConds.some(c => c.pattern.length === 0) &&
-      !req.fileConds.some(c => c.pattern.length === 0)
+      !req.dirConds.some((c) => c.pattern.length === 0) &&
+      !req.fileConds.some((c) => c.pattern.length === 0)
     );
   };
 
@@ -66,7 +65,7 @@
     try {
       const res: ScanResponse = await invoke("scan_directory", { req });
       // console.log(res);
-      const rec = (n: Node, path: string): UsableNode => {
+      const rec = (n: PayloadNode, path: string): UsableNode => {
         const curPath = path + "\\" + n.name;
         let child: ChildProps | undefined = undefined;
         if (n.children != null) {
@@ -97,92 +96,64 @@
   };
 </script>
 
-<div class="wrap">
-  <div class="left">
-    <!-- リクエストフレーム -->
-    <div class="list-frame">
-      <!-- ルートパス -->
-      <div class="label-record">{"*target_root_path"}</div>
-      <input
-        class="root-dir"
-        data--blank={req.rootPath === ""}
-        value={req.rootPath}
-        oninput={(e) => {
-          req.rootPath = e.currentTarget.value;
-          // commit();
-        }}
-      />
-      <!-- 期待値算出時の階層 -->
-      <div class="label-record">{"*expected_div_depth"}</div>
-      <NumberInput
-        min={0}
-        max={50}
-        value={req.expectedDepth}
-        set={(v) => (req.expectedDepth = v)}
-      />
-      <!-- 走査階層の上限（どこまで深くスキャンするか） -->
-      <div class="label-record">{"*limit_depth"}</div>
-      <NumberInput
-        min={0}
-        max={50}
-        value={req.limitDepth}
-        set={(v) => (req.limitDepth = v)}
-        isOptional
-      />
-      <!-- ディレクトリ名の抽出条件 -->
-      <div class="label-record">
-        {"*directory_name_filter_conditions"}
-      </div>
-      <DirNameFilterConds />
-      <!-- ファイル名の抽出条件 -->
-      <div class="label-record">{"*file_name_filter_conditions"}</div>
-      <FileNameFilterConds />
-    </div>
-    <div class="operation-div">
-      <OperationButton name={"Reset"} width={160} callback={reset} />
-      <OperationButton
-        name={"Scan"}
-        width={160}
-        disable={!isRequestOk()}
-        callback={start}
-      />
-    </div>
+<!-- リクエストフレーム -->
+<div class="list-frame">
+  <!-- ルートパス -->
+  <div class="label-record">{"*target_root_path"}</div>
+  <input
+    class="root-dir"
+    data--blank={req.rootPath === ""}
+    value={req.rootPath}
+    oninput={(e) => {
+      req.rootPath = e.currentTarget.value;
+      // commit();
+    }}
+  />
+  <!-- 期待値算出時の階層 -->
+  <div class="label-record">{"*expected_div_depth"}</div>
+  <NumberInput
+    min={0}
+    max={50}
+    value={req.expectedDepth}
+    set={(v) => (req.expectedDepth = v)}
+  />
+  <!-- 走査階層の上限（どこまで深くスキャンするか） -->
+  <div class="label-record">{"*limit_depth"}</div>
+  <NumberInput
+    min={0}
+    max={50}
+    value={req.limitDepth}
+    set={(v) => (req.limitDepth = v)}
+    isOptional
+  />
+  <!-- ディレクトリ名の抽出条件 -->
+  <div class="label-record">
+    {"*directory_name_filter_conditions"}
   </div>
-  <div class="right">
-    <!-- <textarea value={$result} readonly></textarea> -->
-    {#if $store.resultTree != undefined}
-      <ChooseFrame root={$store.resultTree} />
-    {/if}
-  </div>
-  {#if $isSearch}
-    <div class="blind">
-      <div class="list-item">{count}</div>
-      {#each $scalnningDispDir as a}
-        <div class="list-item"><span>{a}</span></div>
-      {/each}
-    </div>
-  {/if}
+  <DirNameFilterConds />
+  <!-- ファイル名の抽出条件 -->
+  <div class="label-record">{"*file_name_filter_conditions"}</div>
+  <FileNameFilterConds />
 </div>
+<div class="operation-div">
+  <OperationButton name={"Reset"} width={160} callback={reset} />
+  <OperationButton
+    name={"Scan"}
+    width={160}
+    disable={!isRequestOk()}
+    callback={start}
+  />
+</div>
+{#if $isSearch}
+  <div class="blind">
+    <div class="list-item">{count}</div>
+    {#each $scalnningDispDir as a}
+      <div class="list-item"><span>{a}</span></div>
+    {/each}
+  </div>
+{/if}
 
 <style>
-  .wrap {
-    display: inline-block;
-    position: relative;
-    background-color: #fec;
-    width: 100%;
-    height: 100%;
-    > .left,
-    .right {
-      display: inline-block;
-      position: relative;
-      vertical-align: top;
-      width: 50%;
-      height: 100%;
-    }
-  }
-  .left {
-    background-color: #eff;
-  }
   .operation-div {
     display: inline-block;
     position: relative;
@@ -190,9 +161,6 @@
     height: 32px;
     background-color: #8888aa44;
     text-align: right;
-  }
-  .right {
-    background-color: #eff;
   }
   .list-frame {
     display: inline-block;

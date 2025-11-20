@@ -2,7 +2,7 @@ import type {
   NodeDispProps,
   NodeIndent,
   UsableNode,
-} from "../../store/types";
+} from "../../../store/types";
 
 namespace ChooseUtil {
   export const getDispRecords = (
@@ -66,8 +66,7 @@ namespace ChooseUtil {
   const buildFlatChooser = (root: UsableNode) => {
     const list: NodeDispProps[] = [];
 
-    const rec = (node: UsableNode) => exec(node);
-    const exec = (node: UsableNode) => {
+    const rec = (node: UsableNode) => {
       if (node.child == undefined) {
         list.push({
           indents: [],
@@ -75,12 +74,31 @@ namespace ChooseUtil {
           seq: list.length,
         });
       } else {
-        node.child.nodes.forEach((n) => exec(n));
+        node.child.nodes.forEach((n) => rec(n));
       }
     };
     if (root.child == undefined) throw new Error();
 
-    root.child.nodes.forEach((n) => exec(n));
+    root.child.nodes.forEach((n) => rec(n));
+    return list;
+  };
+
+  export const getSelectedFiles = (root: UsableNode) => {
+    const list: string[] = [];
+
+    const rec = (node: UsableNode) => {
+      if (node.child == undefined) {
+        // 選択中のアイテムのみ追加
+        if (node.isSelected) {
+          list.push(node.path.replace(root.path, ''));
+        }
+      } else {
+        node.child.nodes.forEach((n) => rec(n));
+      }
+    };
+    if (root.child == undefined) throw new Error();
+
+    root.child.nodes.forEach((n) => rec(n));
     return list;
   };
 }

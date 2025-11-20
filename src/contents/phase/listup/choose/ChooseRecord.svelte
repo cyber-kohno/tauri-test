@@ -1,15 +1,15 @@
 <script lang="ts">
   import { invoke } from "@tauri-apps/api/core";
-  import type { NodeDispProps, UsableNode } from "../../store/types";
-  import store from "../../store/store";
+  import type { NodeDispProps, UsableNode } from "../../../store/types";
+  import store from "../../../store/store";
 
   export let item: NodeDispProps;
   export let dir: string | null = null;
 
   $: invalidate = () => {
-      if ($store.resultTree == undefined) throw new Error();
-      $store.resultTree = { ...$store.resultTree };
-  }
+    if ($store.resultTree == undefined) throw new Error();
+    $store.resultTree = { ...$store.resultTree };
+  };
 
   $: toggleOpen = () => {
     const child = item.node.child;

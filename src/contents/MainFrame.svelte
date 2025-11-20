@@ -1,9 +1,9 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import NaviFrame from "./util/NaviFrame.svelte";
-  import ScanCondFrame from "./phase/scan/ScanCondFrame.svelte";
   import store from "./store/store";
   import RevalidateFrame from "./phase/revalidate/RevalidateFrame.svelte";
+  import ListupFrame from "./phase/listup/ListupFrame.svelte";
 
   onMount(() => {
     const handler = (e: MouseEvent) => {
@@ -25,7 +25,7 @@
 </div>
 <div class="main">
   {#if phase === "listup"}
-    <ScanCondFrame />
+    <ListupFrame />
   {:else if phase === "revalidate"}
     <RevalidateFrame />
   {/if}

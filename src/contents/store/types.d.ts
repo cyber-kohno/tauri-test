@@ -28,11 +28,11 @@ export interface DirCond extends FileCond {
 
 export type ScanResponse = {
   result: string;
-  node: Node;
+  node: PayloadNode;
 };
-export interface Node {
+export interface PayloadNode {
   name: string;
-  children: null | Node[];
+  children: null | PayloadNode[];
 }
 
 export interface ChildProps {

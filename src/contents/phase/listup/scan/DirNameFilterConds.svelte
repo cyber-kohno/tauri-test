@@ -1,16 +1,18 @@
 <script lang="ts">
-  import store from "../../store/store";
-  import TextInput from "../../util/form/TextInput.svelte";
+  import store from "../../../store/store";
+  import NumberInput from "../../../util/form/NumberInput.svelte";
+  import TextInput from "../../../util/form/TextInput.svelte";
+
 
   $: req = $store.scanRequest;
-  $: fileConds = req.fileConds;
+  $: dirConds = req.dirConds;
   $: invalidate = () => ($store.scanRequest = {...req});
 
   /**
    * 終端に条件追加
    */
   const add = () => {
-    fileConds.push({
+    dirConds.push({
       pattern: "",
       isExclusion: false,
     });
@@ -21,15 +23,21 @@
    * 指定行の条件削除
    */
   const del = (index: number) => {
-    fileConds.splice(index, 1);
+    dirConds.splice(index, 1);
     invalidate();
   };
 </script>
 
-{#each fileConds as con, i}
+{#each dirConds as con, i}
   <div class="record">
     <button class="adddel" onclick={() => del(i)}>{"-"}</button>
-
+    <!-- 階層 -->
+    <NumberInput
+      min={0}
+      max={50}
+      value={con.depth}
+      set={(v) => (con.depth = v)}
+    />
     <!-- 含む・含まない（除外） -->
     <button
       class="toggle"

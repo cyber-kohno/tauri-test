@@ -1,15 +1,17 @@
 <script lang="ts">
-  import RvResultPhase from "./RvResultPhase.svelte";
-  import RvTargetPhase from "./RvTargetPhase.svelte";
-
+  import store from "../../store/store";
+  import ChoosePhase from "./choose/ChoosePhase.svelte";
+  import ScanCondPhase from "./scan/ScanCondPhase.svelte";
 </script>
 
 <div class="wrap">
   <div class="left">
-    <RvTargetPhase />
+    <ScanCondPhase />
   </div>
   <div class="right">
-    <RvResultPhase />
+    {#if $store.resultTree != undefined}
+      <ChoosePhase root={$store.resultTree} />
+    {/if}
   </div>
 </div>
 
@@ -18,8 +20,8 @@
     display: inline-block;
     position: relative;
     background-color: #fec;
-    width: calc(100% - 8px);
-    height: calc(100% - 8px);
+    width: 100%;
+    height: 100%;
     > .left,
     .right {
       display: inline-block;
@@ -30,7 +32,7 @@
     }
   }
   .left {
-    background-color: rgb(211, 223, 236);
+    background-color: #eff;
   }
   .right {
     background-color: #eff;
