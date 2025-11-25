@@ -6,7 +6,6 @@ const store = writable<Store>({
   scanRequest: {
     rootPath: "",
     expectedDepth: 0,
-    limitDepth: 0,
     dirConds: [],
     fileConds: [],
   },

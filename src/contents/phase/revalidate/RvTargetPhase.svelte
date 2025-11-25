@@ -10,6 +10,7 @@
   $: test = () => {};
 </script>
 
+<div class="operation-div"></div>
 <div class="main">
   <textarea
     value={targets}
@@ -28,16 +29,17 @@
     display: inline-block;
     position: relative;
     width: 100%;
-    height: calc(100% - 60px);
-    background-color: white;
+    height: calc(100% - 64px);
+    background-color: #d3d3d3;
   }
   textarea {
     display: inline-block;
     position: relative;
-    width: 100%;
-    height: 100%;
+    margin: 4px 0 0 4px;
+    width: calc(100% - 8px);
+    height: calc(100% - 8px);
+    background-color: white;
     resize: none;
-    background-color: #fff;
     outline: none;
     box-sizing: border-box;
     border: none;

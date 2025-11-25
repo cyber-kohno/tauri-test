@@ -17,9 +17,9 @@
   .wrap {
     display: inline-block;
     position: relative;
-    background-color: #fec;
-    width: calc(100% - 8px);
-    height: calc(100% - 8px);
+    background-color: rgb(55, 237, 0);
+    width: 100%;
+    height: 100%;
     > .left,
     .right {
       display: inline-block;
