@@ -85,14 +85,20 @@
     {child == null ? "FILE" : "DIR"}
   </button>
   {#if child != undefined && child.nodes.length > 0}
-    <button onclick={toggleOpen}>{child.isOpen ? "-" : "+"}</button>
+    <button class="open" onclick={toggleOpen}>{child.isOpen ? "-" : "+"}</button
+    >
   {/if}
   {#if dir != null}
     <div class="dir">
       {dir}
     </div>
   {/if}
-  <a class="str" data--file={child == null} oncontextmenu={dispFile}>
+  <a
+    class="str"
+    data--file={child == null}
+    data--dirmode={dir == null}
+    oncontextmenu={dispFile}
+  >
     {item.node.name}
   </a>
   {#if child != undefined}
@@ -148,7 +154,7 @@
     width: 18px;
     height: 5px;
   }
-  button {
+  button.open {
     display: inline-block;
     position: relative;
     width: 40px;
@@ -156,7 +162,7 @@
     background-color: #fff;
     box-sizing: border-box;
     border-radius: 2px;
-    margin: 2px 0 0 4px;
+    margin: 2px 0 0 2px;
     color: #222;
     font-size: 14px;
     font-weight: 400;
@@ -166,11 +172,11 @@
       background-color: #ff5;
     }
   }
-  .type {
+  button.type {
     display: inline-block;
     position: relative;
     height: 100%;
-    margin: 0 4px 0 2px;
+    margin: 0 0 0 2px;
     font-size: 14px;
     color: #fff;
     text-align: center;
@@ -218,12 +224,16 @@
     border: 1px solid #00000044;
     background-color: #ffffff33;
     border-radius: 2px;
+    margin-left: 2px;
+  }
+  .str[data--dirmode="true"] {
+    margin-left: 2px;
   }
   .dir {
     display: inline-block;
     position: relative;
     height: 100%;
-    /*margin: 0 0 0 4px;*/
+    margin: 0 0 0 2px;
     font-size: 14px;
     padding: 0 2px;
     box-sizing: border-box;

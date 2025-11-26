@@ -3,12 +3,13 @@ export type Store = {
   scanRequest: ScanRequest;
   resultTree?: UsableNode;
 
-  rvReq: RevalidateRequest;
+  rvReq?: RevalidateRequest;
+  executeReq?: ExecuteRequest;
 
   preview?: Preview;
 };
 
-export type Phase = 'listup' | 'revalidate' | 'execute';
+export type Phase = 'listup' | 'revalidate' | 'edit';
 
 export type ScanRequest = {
   rootPath: string;
@@ -63,4 +64,9 @@ export type Preview = {
 
 export type RevalidateRequest = {
   targets: string;
+};
+export type ExecuteRequest = {
+  files: string[];
+  funcSource: string;
+  output: string;
 };

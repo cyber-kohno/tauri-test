@@ -2,25 +2,33 @@
   import store from "../../store/store";
   import OperationButton from "../../util/OperationButton.svelte";
 
-  $: targets = $store.rvReq.targets;
+  $: req = (() => {
+    const req = $store.rvReq;
+    if (req == undefined) throw new Error();
+    return req;
+  })();
 
   $: cancel = () => {
+    $store.rvReq = undefined;
     $store.phase = "listup";
   };
   $: test = () => {};
+
+  $: rootPath = $store.scanRequest.rootPath;
 </script>
 
-<div class="operation-div"></div>
+<!-- ルートパス -->
+<div class="fixed-label">{rootPath}</div>
 <div class="main">
   <textarea
-    value={targets}
+    value={req.targets}
     oninput={(e) => {
-      $store.rvReq.targets = e.currentTarget.value;
+      req.targets = e.currentTarget.value;
     }}
   ></textarea>
 </div>
 <div class="operation-div">
-  <OperationButton name={"Reset"} width={160} callback={cancel} />
+  <OperationButton name={"Cancel"} width={160} callback={cancel} />
   <OperationButton name={"Test"} width={160} callback={test} />
 </div>
 
@@ -53,5 +61,21 @@
     height: 32px;
     background-color: #8888aa44;
     text-align: right;
+  }
+  .fixed-label {
+    display: inline-block;
+    position: relative;
+    width: 100%;
+    height: 32px;
+    background-color: #f4f4ffd7;
+    box-sizing: border-box;
+    color: rgb(34, 74, 177);
+    font-style: italic;
+    font-size: 18px;
+    line-height: 28px;
+    font-weight: 400;
+    text-align: left;
+    padding: 0 0 0 4px;
+    white-space: nowrap;
   }
 </style>

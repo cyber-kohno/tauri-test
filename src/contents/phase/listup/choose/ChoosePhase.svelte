@@ -39,12 +39,14 @@
     $store.resultTree = undefined;
   };
   $: toggleView = () => {
-    $isFlat = !$isFlat;
+    console.log(dispRecords.length);
   };
   $: transfer = () => {
     $store.phase = "revalidate";
-    $store.rvReq.targets = ChooseUtil.getSelectedFiles(root).join('\n');
-  }
+    $store.rvReq = {
+      targets: ChooseUtil.getSelectedFiles(root).join("\n"),
+    };
+  };
 
   $: getDir = (item: NodeDispProps) => {
     let ret: string | null = null;

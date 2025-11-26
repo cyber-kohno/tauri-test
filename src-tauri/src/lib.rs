@@ -1,8 +1,13 @@
+use encoding_rs::SHIFT_JIS; // ← Shift‑JIS を取り込む
+use encoding_rs_io::DecodeReaderBytesBuilder;
 use regex::Regex;
 use serde::Deserialize;
 use serde::Serialize;
 use std::fs;
+use std::fs::File;
 use std::io;
+use std::io::BufReader;
+use std::io::Read;
 use std::path::Path;
 use tauri::{command, AppHandle, Emitter};
 
@@ -83,7 +88,7 @@ struct Progress {
     depth: u32,
     counter: u32,
 }
-
+/// 再帰的にディレクトリを検索する
 fn search_file_rec(
     dir: &str,
     app: &AppHandle,
@@ -96,10 +101,16 @@ fn search_file_rec(
     let name = Path::new(dir).file_name().unwrap().to_str().unwrap();
     // println!("{:?}", dir_conds);
     let is_accept = req.dir_conds.iter().all(|cond| {
-        if cond.depth.map_or(true, |d| d != depth) {
-            return true;
+        let is_match = wildcard_match(&cond.base.pattern, name);
+        let is_exclusion = cond.base.is_exclusion;
+        if is_match {
+            match cond.depth {
+                Some(d) => !is_exclusion && d == depth,
+                None => !is_exclusion,
+            }
+        } else {
+            is_exclusion
         }
-        wildcard_match(&cond.base.pattern, name) != cond.base.is_exclusion
     });
     if depth == 1 {
         println!("{}---{}: {}", depth, is_accept, name);
@@ -140,16 +151,17 @@ fn search_file_rec(
                 None => {}
             };
         } else {
-            // res.result.push_str(&format!(
-            //     "{}\n",
-            //     // path.file_name().unwrap().to_str().unwrap()
-            //     path.to_str().unwrap()
-            // ));
             let name = path.file_name().unwrap().to_str().unwrap().to_string();
-            children.push(Node {
-                name,
-                children: None,
+
+            let is_accept = req.file_conds.iter().all(|cond: &FileCond| {
+                wildcard_match(&cond.base.pattern, &name) != cond.base.is_exclusion
             });
+            if is_accept {
+                children.push(Node {
+                    name,
+                    children: None,
+                });
+            }
         }
     }
     node.children = Some(children);
@@ -191,17 +203,26 @@ struct FileRequest {
 #[command]
 fn read_file(req: FileRequest) -> String {
     println!("{}", req.file_path);
-    let content = read_file_to_string(req.file_path).unwrap();
+    let content = match read_file_to_string(req.file_path) {
+        Ok(text) => text,
+        Err(err) => err.to_string(),
+    };
     content
 }
-/// 指定したパスのファイルを読み込み、文字列として返す
-///
-/// # Errors
-/// * ファイルが見つからない
-/// * 読み込みに失敗した
-/// * ファイルの内容が UTF‑8 でない
+
 fn read_file_to_string<P: AsRef<std::path::Path>>(path: P) -> Result<String, io::Error> {
-    fs::read_to_string(path)
+    let file = File::open(path)?;
+    let mut buf_reader = BufReader::new(file);
+
+    // デフォルトでは UTF‑8 が前提です。別エンコーディングなら `DecodeReaderBytesBuilder::new().encoding(Some(Encoding::for_label(b"shift_jis").unwrap()))` で指定できます
+    // let mut decoder = DecodeReaderBytesBuilder::new().build(&mut buf_reader);
+    let mut decoder = DecodeReaderBytesBuilder::new()
+        .encoding(Some(SHIFT_JIS)) // ← ここで SJIS を指定
+        .build(&mut buf_reader); // ← デコーダを作成
+
+    let mut s = String::new();
+    decoder.read_to_string(&mut s)?;
+    Ok(s)
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

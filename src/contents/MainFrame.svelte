@@ -1,9 +1,10 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import NaviFrame from "./util/NaviFrame.svelte";
+  import NaviFrame from "./util/navi/NaviFrame.svelte";
   import store from "./store/store";
   import RevalidateFrame from "./phase/revalidate/RevalidateFrame.svelte";
   import ListupFrame from "./phase/listup/ListupFrame.svelte";
+  import EditFrame from "./phase/execute/edit/EditFrame.svelte";
 
   onMount(() => {
     const handler = (e: MouseEvent) => {
@@ -28,6 +29,8 @@
     <ListupFrame />
   {:else if phase === "revalidate"}
     <RevalidateFrame />
+  {:else if phase === "edit"}
+    <EditFrame />
   {/if}
 </div>
 

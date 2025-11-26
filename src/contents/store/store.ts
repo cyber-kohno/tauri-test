@@ -8,9 +8,6 @@ const store = writable<Store>({
     expectedDepth: 0,
     dirConds: [],
     fileConds: [],
-  },
-  rvReq: {
-    targets: ''
   }
 });
 
