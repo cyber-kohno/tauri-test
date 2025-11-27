@@ -17,8 +17,7 @@
   $: transfer = () => {
     $store.executeReq = {
         files: req.targets.split('\n').map(t => `${rootPath}\\${t}`),
-        funcSource: '',
-        output: ''
+        funcSource: ''
     };
     $store.phase = 'edit';
   };
@@ -27,7 +26,7 @@
 <div class="main">
 </div>
 <div class="operation-div">
-  <OperationButton name={"Cancel"} width={160} callback={cancel} />
+  <OperationButton name={"Cancel"} width={160} disable={true} callback={cancel} />
   <OperationButton name={"Regist"} width={160} callback={transfer} />
 </div>
 

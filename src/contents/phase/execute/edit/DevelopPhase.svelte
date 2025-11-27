@@ -3,7 +3,6 @@
   import store from "../../../store/store";
   import OperationButton from "../../../util/OperationButton.svelte";
   import MonacoEditor from "../../../util/MonacoEditor.svelte";
-
   $: req = (() => {
     const req = $store.executeReq;
     if (req == undefined) throw new Error();
@@ -15,51 +14,75 @@
     $store.phase = "revalidate";
   };
   $: execute = () => {
-    console.log(`execute start! ${req.files.length}`);
-    (async () => {
+    // console.log(`execute start! ${req.files.length}`);
+
+    $store.executeRes = {
+      endCnt: 0,
+      output: "",
+    };
+    const res = $store.executeRes;
+
+    const start = async () => {
       // 一時的にコンソールログを変更
       const bak = console.log;
       console.log = (...args) => {
-        req.output += `${args[0]}`;
+        res.output += `${args[0]}`;
         $store.executeReq = { ...req };
       };
-      const func = new Function("content", req.funcSource);
+      const func = new Function("$path", "$content", req.funcSource);
       for (const f of req.files) {
-        console.log(`${f}\n`);
+        // console.log(`${f}\n`);
         const content = await invoke("read_file", { req: { filePath: f } });
-        func(content);
+        func(f, content);
+        res.endCnt++;
+        $store.executeRes = { ...res };
       }
-
       // コンソールログを戻す
       console.log = bak;
-    })();
+    };
+
+    start().catch((e) => {
+      alert(e);
+      $store.executeRes = undefined;
+    });
   };
+
+  $: isExecute = $store.executeRes != undefined;
 </script>
 
 <div class="main">
-  <!-- <textarea
-    value={req.funcSource}
-    oninput={(e) => {
-      req.funcSource = e.currentTarget.value;
-    }}
-  ></textarea> -->
   <div class="inner">
     <MonacoEditor
-      bind:value={req.funcSource}
+      value={req.funcSource}
       language="javascript"
       theme="vs-dark"
-      on:change={({ detail }) => {
-        req.funcSource = detail.value;
+      onChange={(value) => {
+        req.funcSource = value;
       }}
+      declares={[
+        `declare const $log: (str: string) => void;`,
+        `declare const $path: string;`,
+        `declare const $content: string;`,
+      ]}
     />
-    {#if req.output !== ""}
+    {#if $store.executeRes != undefined}
       <div class="blind"></div>
     {/if}
   </div>
 </div>
 <div class="operation-div">
-  <OperationButton name={"Cancel"} width={160} callback={cancel} />
-  <OperationButton name={"Execute"} width={160} callback={execute} />
+  <OperationButton
+    name={"Cancel"}
+    width={160}
+    disable={isExecute}
+    callback={cancel}
+  />
+  <OperationButton
+    name={"Execute"}
+    width={160}
+    disable={isExecute || req.funcSource.length === 0}
+    callback={execute}
+  />
 </div>
 
 <style>

@@ -3,24 +3,29 @@
   import OperationButton from "../../../util/OperationButton.svelte";
   import SyntaxHighlighter from "../../../util/SyntaxHighlighter.svelte";
 
-  $: req = (() => {
+  $: totalCnt = (() => {
     const req = $store.executeReq;
     if (req == undefined) throw new Error();
-    return req;
+    return req.files.length;
+  })();
+  $: res = (() => {
+    const res = $store.executeRes;
+    if (res == undefined) throw new Error();
+    return res;
   })();
 
   $: cancel = () => {
-    req.output = '';
-    $store.executeReq = {...req};
-    // $store.phase = "revalidate";
+    $store.executeRes = undefined;
   };
 </script>
 
+<div class="operation-div">
+  <div class="progress-frame">
+    <div class="progress-inner" style:width="{Math.floor(res.endCnt / totalCnt) * 100}%"></div>
+  </div>
+</div>
 <div class="main">
-  <textarea
-    readonly
-    value={req.output}
-  ></textarea>
+  <textarea readonly value={res.output}></textarea>
   <!-- <SyntaxHighlighter code={req.output} /> -->
 </div>
 <div class="operation-div">
@@ -32,7 +37,7 @@
     display: inline-block;
     position: relative;
     width: 100%;
-    height: calc(100% - 32px);
+    height: calc(100% - 64px);
     background-color: #d3d3d3;
   }
   textarea {
@@ -56,5 +61,25 @@
     height: 32px;
     background-color: #8888aa44;
     text-align: right;
+  }
+  .progress-frame {
+    display: inline-block;
+    position: absolute;
+    left: 6px;
+    top: 6px;
+    width: calc(100% - 12px);
+    height: calc(100% - 12px);
+    background-color: #ffffff44;
+    border: 2px solid rgb(188, 0, 0);
+    box-sizing: border-box;
+    text-align: left;
+    border-radius: 4px;
+  }
+  .progress-inner {
+    display: inline-block;
+    position: relative;
+    height: 100%;
+    background-color: rgb(255, 101, 101);
+    border-radius: 4px;
   }
 </style>

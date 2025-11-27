@@ -17,7 +17,7 @@
     background-color: rgba(68, 202, 255, 0.157);
     font-size: 20px;
     font-weight: 600;
-    color: #fff;
+    color: rgba(255, 51, 51, 0.285);
     padding: 0 30px;
     border-radius: 4px;
   }

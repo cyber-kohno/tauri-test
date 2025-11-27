@@ -1,7 +1,7 @@
 <script lang="ts">
+  import store from "../../../store/store";
   import DevelopPhase from "./DevelopPhase.svelte";
   import OutputPhase from "./OutputPhase.svelte";
-
 </script>
 
 <div class="wrap">
@@ -9,7 +9,9 @@
     <DevelopPhase />
   </div>
   <div class="right">
-    <OutputPhase />
+    {#if $store.executeRes != undefined}
+      <OutputPhase />
+    {/if}
   </div>
 </div>
 

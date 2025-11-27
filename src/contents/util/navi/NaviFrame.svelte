@@ -14,7 +14,7 @@
     return $store.executeReq != undefined;
   })();
   $: isDevelopEnd = (() => {
-    return false;
+    return $store.executeRes != undefined;
   })();
 </script>
 

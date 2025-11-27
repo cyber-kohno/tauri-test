@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "tauri-test",
+  "productName": "analysis implemeter",
   "version": "0.1.0",
   "identifier": "com.funny.tauri-test",
   "build": {
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "tauri-test",
+        "title": "analysis implemeter",
         "width": 1280,
         "height": 720
       }

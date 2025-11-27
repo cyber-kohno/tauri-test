@@ -29,7 +29,7 @@
 </div>
 <div class="operation-div">
   <OperationButton name={"Cancel"} width={160} callback={cancel} />
-  <OperationButton name={"Test"} width={160} callback={test} />
+  <OperationButton name={"Test"} width={160} disable={true} callback={test} />
 </div>
 
 <style>

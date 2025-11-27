@@ -184,7 +184,7 @@
     box-sizing: border-box;
     border-radius: 4px;
     font-weight: 600;
-    line-height: 22px;
+    line-height: 20px;
     user-select: none;
     cursor: default;
   }

@@ -39,7 +39,8 @@
     $store.resultTree = undefined;
   };
   $: toggleView = () => {
-    console.log(dispRecords.length);
+    // console.log(dispRecords.length);
+    $isFlat = !$isFlat;
   };
   $: transfer = () => {
     $store.phase = "revalidate";

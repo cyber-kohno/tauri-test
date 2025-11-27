@@ -5,6 +5,7 @@ export type Store = {
 
   rvReq?: RevalidateRequest;
   executeReq?: ExecuteRequest;
+  executeRes?: ExecuteResponse;
 
   preview?: Preview;
 };
@@ -68,5 +69,8 @@ export type RevalidateRequest = {
 export type ExecuteRequest = {
   files: string[];
   funcSource: string;
+};
+export type ExecuteResponse = {
+  endCnt: number;
   output: string;
 };

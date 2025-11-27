@@ -1,37 +1,45 @@
 <script lang="ts">
-  import { onMount, onDestroy, createEventDispatcher } from 'svelte';
-  import type * as monaco from 'monaco-editor';
+  import { onMount, onDestroy } from "svelte";
+  import loader from "@monaco-editor/loader";
+  import type * as Monaco from "monaco-editor/esm/vs/editor/editor.api.js";
 
   let editorDiv: HTMLDivElement | null = null;
-  let editor: monaco.editor.IStandaloneCodeEditor | null = null;
+  let editor: Monaco.editor.IStandaloneCodeEditor;
 
   // 初期内容、言語、テーマなど
-  export let value: string = '';
-  export let language: string = 'javascript';
-  export let theme: string = 'vs-dark';
-  export let options: monaco.editor.IStandaloneEditorConstructionOptions = {};
+  export let value: string = "";
+  export let language: string = "javascript";
+  export let theme: string = "vs";
+  export let onChange: (value: string) => void = () => {};
 
-  // 変更イベントを外部に流す
-  const dispatch = createEventDispatcher();
+  export let declares: string[] = [];
+
+  let monaco: typeof Monaco;
 
   onMount(async () => {
     if (!editorDiv) return;
 
-    // monaco がグローバルに存在するので型だけ import しておく
-    const monacoLib = await import('monaco-editor');
+    const monacoEditor = await import("monaco-editor");
+    loader.config({ monaco: monacoEditor.default });
+    monaco = await loader.init();
 
-    editor = monacoLib.editor.create(editorDiv, {
+    // ① 型定義を投げ込む
+    const typescript = monaco.languages.typescript as any;
+    typescript.javascriptDefaults.addExtraLib(`${declares.join()}`, "global.d.ts");
+
+    // Your monaco instance is ready, let's display some code!
+    editor = monaco.editor.create(editorDiv, {
       value,
       language,
       theme,
-      automaticLayout: true,
-      ...options
+      automaticLayout: true, // 例：ウィンドウリサイズでレイアウトを再計算
+      // …任意のオプション
     });
 
     // 内容変更時にイベントを発火
     editor.onDidChangeModelContent(() => {
-      const newVal = editor?.getValue() ?? '';
-      dispatch('change', { value: newVal });
+      const newVal = editor?.getValue() ?? "";
+      onChange(newVal); // ← ここがコールバック呼び出し
     });
   });
 
