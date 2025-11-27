@@ -23,22 +23,18 @@
     const res = $store.executeRes;
 
     const start = async () => {
-      // 一時的にコンソールログを変更
-      const bak = console.log;
-      console.log = (...args) => {
-        res.output += `${args[0]}`;
+      const log = (str: string) => {
+        res.output += `${str}`;
         $store.executeReq = { ...req };
       };
-      const func = new Function("$path", "$content", req.funcSource);
+      const func = new Function("$log", "$path", "$content", req.funcSource);
       for (const f of req.files) {
         // console.log(`${f}\n`);
         const content = await invoke("read_file", { req: { filePath: f } });
-        func(f, content);
+        func(log, f, content);
         res.endCnt++;
         $store.executeRes = { ...res };
       }
-      // コンソールログを戻す
-      console.log = bak;
     };
 
     start().catch((e) => {
