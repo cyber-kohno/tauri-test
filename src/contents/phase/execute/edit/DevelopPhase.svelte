@@ -23,15 +23,15 @@
     const res = $store.executeRes;
 
     const start = async () => {
-      const log = (str: string) => {
+      const out = (str: string) => {
         res.output += `${str}`;
         $store.executeReq = { ...req };
       };
-      const func = new Function("$log", "$path", "$content", req.funcSource);
+      const func = new Function("$out", "$path", "$content", req.funcSource);
       for (const f of req.files) {
         // console.log(`${f}\n`);
         const content = await invoke("read_file", { req: { filePath: f } });
-        func(log, f, content);
+        func(out, f, content);
         res.endCnt++;
         $store.executeRes = { ...res };
       }
@@ -50,13 +50,13 @@
   <div class="inner">
     <MonacoEditor
       value={req.funcSource}
-      language="javascript"
+      language="typescript"
       theme="vs-dark"
       onChange={(value) => {
         req.funcSource = value;
       }}
       declares={[
-        `declare const $log: (str: string) => void;`,
+        `declare const $out: (str: string) => void;`,
         `declare const $path: string;`,
         `declare const $content: string;`,
       ]}

@@ -25,7 +25,7 @@
 
     // ① 型定義を投げ込む
     const typescript = monaco.languages.typescript as any;
-    typescript.javascriptDefaults.addExtraLib(`${declares.join()}`, "global.d.ts");
+    typescript.typescriptDefaults.addExtraLib(`${declares.join()}`, "global.d.ts");
 
     // Your monaco instance is ready, let's display some code!
     editor = monaco.editor.create(editorDiv, {
