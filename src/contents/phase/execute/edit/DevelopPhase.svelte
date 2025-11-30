@@ -3,11 +3,22 @@
   import store from "../../../store/store";
   import OperationButton from "../../../util/OperationButton.svelte";
   import MonacoEditor from "../../../util/MonacoEditor.svelte";
+  import * as ts from "typescript";
   $: req = (() => {
     const req = $store.executeReq;
     if (req == undefined) throw new Error();
     return req;
   })();
+
+  const transpileTsToJs = (tsCode: string) => {
+    return ts.transpileModule(tsCode, {
+      compilerOptions: {
+        module: ts.ModuleKind.ESNext,
+        target: ts.ScriptTarget.ES2017,
+        // 必要ならここに strict, esModuleInterop などを入れる
+      },
+    }).outputText;
+  }
 
   $: cancel = () => {
     $store.executeReq = undefined;
@@ -27,7 +38,7 @@
         res.output += `${str}`;
         $store.executeReq = { ...req };
       };
-      const func = new Function("$out", "$path", "$content", req.funcSource);
+      const func = new Function("$out", "$path", "$content", transpileTsToJs(req.funcSource));
       for (const f of req.files) {
         // console.log(`${f}\n`);
         const content = await invoke("read_file", { req: { filePath: f } });
